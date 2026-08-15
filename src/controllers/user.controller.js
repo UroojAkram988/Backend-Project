@@ -18,16 +18,16 @@ const registerUser = asynchandler(async (req, res) => {
    //send response back to frontend
  
 
-   const{username, email, fullName, password} = req.body
+   const{username, email, fullname, password} = req.body
    console.log("email", email)
 
-   if([username, email, fullName, password].some((field)=> field?.trim() === "")){
+   if([username, email, fullname, password].some((field)=> field?.trim() === "")){
     throw new ApiError(400, "All fields are required")
    }//Array mein se agar ANY ONE field callback ki condition ko true 
    //banati hai, .some() immediately true return karega.
 
   //for existed users
-  const existedUser =User.findOne({
+  const existedUser =await User.findOne({
     $or:[{email}, {username}]
   })
 
@@ -54,7 +54,7 @@ if(!avatar){
 
 //create user obj and push to db
 const user=     await User.create({
-  fullName,
+  fullname,
   avatar: avatar.url,
   coverImage: coverImage?.url || "",
   email,
