@@ -43,8 +43,8 @@ const userSchema = new Schema(
       required: [true, 'Password is required'],
       minlength: 6,
     },
-
-    refreshToken: {
+refreshToken
+    : {
       type: String,
     },
   },
@@ -52,6 +52,7 @@ const userSchema = new Schema(
     timestamps: true,
   }
 );
+console.log("NEW USER MODEL LOADED");
 /*for password hashing we are using pre save hook of mongoose so that before saving the user document in database we can hash the password and then save it in database*/
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
