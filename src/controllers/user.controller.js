@@ -4,7 +4,7 @@ import { User } from '../models/user.model.js';
 import { uploadoncloudinary } from '../utils/cloudinary.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from "jsonwebtoken";
-
+import mongoose from 'mongoose';
 //method for generating access token and referesh token
 const generateAccessandRefereshtoken = async (userid) => {
   try {
@@ -171,7 +171,7 @@ const logoutUser = asynchandler(async (req, res) => {
 
 //refresh access token using refresh token
 const refereshaccesstoken=asynchandler(async (req,res)=>{
-  const incomingrefreshtoken=req.cookies?.Refereshtoken || req.body?.Refereshtoken;
+  const incomingrefreshtoken=req.cookies?.RefereshToken || req.body?.RefereshToken;
 
  if(!incomingrefreshtoken){
   throw new ApiError(401,"unathorized request");
@@ -192,15 +192,21 @@ const options={
   httpOnly:true,
   secure:true
 }
-const {accesstoken,newrefreshtoken}=await generateAccessandRefereshtoken(user._id)
+const { Accesstoken, Refereshtoken } =
+    await generateAccessandRefereshtoken(user._id);
+
+console.log("Access:", Accesstoken);
+console.log("Refresh:", Refereshtoken);
 
 return res.status(200)
-.cookie("accesstoken",accesstoken,options)
-.cookie("refreshtoken",newrefreshtoken,options)
-.json(new ApiResponse(200,"access token refreshed",{
-  accesstoken,
-  refreshToken:newrefreshtoken
-}))
+    .cookie("AccessToken", Accesstoken, options)
+    .cookie("RefereshToken", Refereshtoken, options)
+    .json(
+        new ApiResponse(200, "access token refreshed", {
+            accesstoken: Accesstoken,
+            refreshToken: Refereshtoken
+        })
+    );
 
  
 })
@@ -210,7 +216,7 @@ return res.status(200)
 //change password controller
 
 const changeUserpassword=asynchandler(async(req,res)=>{
-     const [oldpass,newpass]=req.body
+     const {oldpass,newpass}=req.body
      
      const user=await User.findById(req.user?._id)
 
@@ -241,7 +247,7 @@ const getCurrentUser=asynchandler(async (req,res)=>{
 })
 //updating text fields isko modify karna ha
 const updateAccountdetails=asynchandler(async(req,res)=>{
-  const [fullname,email]=req.body
+  const {fullname,email}=req.body
   if(!fullname || !email){
     throw new ApiError(400,"all fields are required")
   }
@@ -255,8 +261,8 @@ const updateAccountdetails=asynchandler(async(req,res)=>{
     },
     {
       new:true
-    }.select("-password")
-  )
+    }
+  ).select("-password")
   return res.status(200)
   .json(new ApiResponse(200,"accounts details are updated successfully",user))
 
@@ -281,8 +287,8 @@ const user=await User.findByIdAndUpdate(req.user?._id,
     },
     {
       new:true
-    }.select("-password")
-  )
+    }
+  ).select("-password")
   return res.status(200)
   .json(new ApiResponse(200,"avatar updated successfully",user))
   
@@ -311,8 +317,8 @@ const user=await User.findByIdAndUpdate(req.user?._id,
     },
     {
       new:true
-    }.select("-password")
-  )
+    }
+  ).select("-password")
   return res.status(200)
   .json(new ApiResponse(200,"coverimage updated successfully",user))
 
@@ -354,10 +360,10 @@ const getuserchannelprofile=asynchandler(async(req,res)=>{
       subscribedtoCount:{$size:"$subscribedto"},
       isSubscribed:{
         $cond:{
-              if:{ $in:[req.user?._id,"$subscribers.subscriber"] ,
+              if:{ $in:[req.user?._id,"$subscribers.subscriber"] },
                 then:true,
                 else:false
-              }
+              
         }
       }
     }
@@ -418,7 +424,7 @@ const getuserwatchhistory=asynchandler(async(req,res)=>{
             }
           },
           {
-            addFields:{
+            $addFields:{
               owner:{
                 $first:"$owner"
               }
